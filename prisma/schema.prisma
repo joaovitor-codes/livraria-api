@@ -1,0 +1,41 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum TipoUsuario {
+  comum
+  admin
+}
+
+// Conta guarda apenas credenciais de acesso; Usuario guarda o perfil
+// e é o ponto de relação com o restante do domínio.
+model Conta {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  senhaHash String   @map("senha_hash")
+  ativo     Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  usuario Usuario?
+
+  @@map("contas")
+}
+
+model Usuario {
+  id          String      @id @default(uuid())
+  contaId     String      @unique @map("conta_id")
+  nome        String
+  tipoUsuario TipoUsuario @default(comum) @map("tipo_usuario")
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+
+  conta Conta @relation(fields: [contaId], references: [id], onDelete: Cascade)
+
+  @@map("usuarios")
+}
